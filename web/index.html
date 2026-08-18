@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Assembly Bad Apple</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+
+  <body>
+    <main>
+      <pre id="screen"></pre>
+
+      <div id="info">
+        Frame:
+        <span id="frame">0</span>
+        /
+        <span id="total-frames">0</span>
+      </div>
+
+      <button id="play" disabled>
+        PLAY
+      </button>
+    </main>
+
+    <audio
+      id="audio"
+      src="BA.wav"
+      preload="auto">
+    </audio>
+
+    <script>
+      var Module = {
+        onRuntimeInitialized: function () {
+          initializePlayer();
+        }
+      };
+    </script>
+
+    <script src="main.js"></script>
+    <script src="player.js"></script>
+
+  </body>
+</html>
