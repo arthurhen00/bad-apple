@@ -3,6 +3,7 @@ const frameElement = document.getElementById("frame");
 const totalFramesElement = document.getElementById("total-frames");
 const playButton = document.getElementById("play");
 const audio = document.getElementById("audio");
+const volumeControl = document.getElementById("volume-control");
 
 let currentFrame = 0;
 let playing = false;
@@ -20,11 +21,15 @@ function initializePlayer() {
 
   totalFramesElement.textContent = frameCount;
 
+  document.getElementById("loading").style.display = "none";
+
   playButton.disabled = false;
 
-  playButton.addEventListener(
-    "click",
-    start
+  playButton.addEventListener("click", start);
+
+  volumeControl.addEventListener("input", function () {
+    audio.volume = volumeControl.value;
+    }
   );
 }
 

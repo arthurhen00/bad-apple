@@ -9,6 +9,10 @@
 
   <body>
     <main>
+      <div id="loading">
+        Loading
+      </div>
+
       <pre id="screen"></pre>
 
       <div id="info">
@@ -21,6 +25,18 @@
       <button id="play" disabled>
         PLAY
       </button>
+
+      <div id="volume">
+        Volume:
+        <input
+          id="volume-control"
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value="1">
+      </div>
+
     </main>
 
     <audio
@@ -37,8 +53,7 @@
       };
     </script>
 
-    <script src="main.js"></script>
     <script src="player.js"></script>
-
+    <script src="main.js"></script>
   </body>
 </html>
