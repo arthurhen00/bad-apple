@@ -40,6 +40,7 @@ A estrutura do arquivo `frames.bin` é:
 │ Magic       4 bytes         │
 │ Version     4 bytes         │
 │ Frame Count 4 bytes         │
+│ FPS         4 bytes         │
 ├─────────────────────────────┤
 │ Frame Index                 │
 ├─────────────────────────────┤
@@ -63,6 +64,7 @@ Os primeiros 12 bytes do arquivo formam o header:
 │ Magic        │ 4 bytes  │
 │ Version      │ 4 bytes  │
 │ Frame Count  │ 4 bytes  │
+│ FPS          │ 4 bytes  │
 └──────────────┴──────────┘
 ```
 
@@ -83,7 +85,7 @@ Indica a versão do formato do arquivo.
 Atualmente:
 
 ```text
-1
+2
 ```
 
 Isso permite alterar o formato no futuro sem que a aplicação tente interpretar incorretamente um arquivo de uma versão diferente.
@@ -95,6 +97,15 @@ Quantidade de frames armazenados:
 
 ```text
 6569
+```
+
+
+### FPS
+
+Taxa de quadros do video original
+
+```text
+30
 ```
 
 

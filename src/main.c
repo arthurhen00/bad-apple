@@ -4,16 +4,12 @@
 #include <string.h>
 #include <time.h>
 
-#define FRAMES 6569
-#define FPS 30
-#define FRAME_TIME_MS (1000.0 / FPS)
-
-#define FRAME_FILE "frames/frames.bin"
+#define FRAME_FILE "frames/_frames.bin"
 
 #define FRAME_MAGIC "BAAS"
-#define FRAME_VERSION 1
+#define FRAME_VERSION 2
 
-#define HEADER_SIZE 12
+#define HEADER_SIZE 20
 #define INDEX_ENTRY_SIZE 8
 
 typedef struct {
@@ -21,6 +17,8 @@ typedef struct {
     uint32_t size;
 } FrameIndex;
 
+static uint32_t frame_count = 0;
+static uint32_t fps = 0;
 
 #ifdef __EMSCRIPTEN__
 
@@ -51,15 +49,16 @@ static int frames_open(void) {
     char magic[4];
 
     uint32_t version;
-    uint32_t frame_count;
-
+    uint32_t file_frame_count;
+    uint32_t file_fps;
 
     /*
      * Header.
      *
-     * magic       -> 4 bytes
-     * version     -> 4 bytes
-     * frame_count -> 4 bytes
+     * magic            -> 4 bytes
+     * version          -> 4 bytes
+     * file_frame_count -> 4 bytes
+     * file_fps         -> 4 bytes
      */
     if (fread(magic, 1, 4, frames_file) != 4) {
         fclose(frames_file);
@@ -73,7 +72,13 @@ static int frames_open(void) {
         return 0;
     }
 
-    if (fread(&frame_count, sizeof(uint32_t), 1, frames_file) != 1) {
+    if (fread(&file_frame_count, sizeof(uint32_t), 1, frames_file) != 1) {
+        fclose(frames_file);
+        frames_file = NULL;
+        return 0;
+    }
+
+    if (fread(&file_fps, sizeof(uint32_t), 1, frames_file) != 1) {
         fclose(frames_file);
         frames_file = NULL;
         return 0;
@@ -91,11 +96,8 @@ static int frames_open(void) {
         return 0;
     }
 
-    if (frame_count != FRAMES) {
-        fclose(frames_file);
-        frames_file = NULL;
-        return 0;
-    }
+    frame_count = file_frame_count;
+    fps = file_fps;
 
     /*
      * Carrega o índice inteiro para memória.
@@ -105,7 +107,7 @@ static int frames_open(void) {
      *     offset -> posição do frame no arquivo
      *     size   -> tamanho do frame
      */
-    frame_index = malloc(sizeof(FrameIndex) * FRAMES);
+    frame_index = malloc(sizeof(FrameIndex) * frame_count);
 
     if (frame_index == NULL) {
         fclose(frames_file);
@@ -113,7 +115,7 @@ static int frames_open(void) {
         return 0;
     }
 
-    if (fread(frame_index, sizeof(FrameIndex), FRAMES, frames_file) != FRAMES) {
+    if (fread(frame_index, sizeof(FrameIndex), frame_count, frames_file) != frame_count) {
         free(frame_index);
         frame_index = NULL;
 
@@ -152,7 +154,7 @@ static void frames_close(void) {
  */
 EMSCRIPTEN_KEEPALIVE
 const char *get_frame(int frame) {
-    if (frame < 1 || frame > FRAMES) {
+    if (frame < 1 || frame > frame_count) {
         return NULL;
     }
 
@@ -202,19 +204,33 @@ const char *get_frame(int frame) {
 
 /*
  * Retorna a quantidade de frames.
+ * Garantir que o arquivo já foi arberto antes de retornar esse valor
  */
 EMSCRIPTEN_KEEPALIVE
 int get_frame_count(void) {
-    return FRAMES;
+    if (frames_file == NULL || frame_index == NULL) {
+        if (!frames_open()) {
+            return 0;
+        }
+    }
+
+    return (int)frame_count;
 }
 
 
 /*
  * Retorna o FPS.
+ * Garantir que o arquivo já foi arberto antes de retornar esse valor
  */
 EMSCRIPTEN_KEEPALIVE
 int get_fps(void) {
-    return FPS;
+    if (frames_file == NULL || frame_index == NULL) {
+        if (!frames_open()) {
+            return 0;
+        }
+    }
+
+    return (int)fps;
 }
 
 
@@ -248,14 +264,16 @@ static int frames_open(void) {
     char magic[4];
 
     uint32_t version;
-    uint32_t frame_count;
+    uint32_t file_frame_count;
+    uint32_t file_fps;
 
     /*
      * Header.
      *
-     * magic       -> 4 bytes
-     * version     -> 4 bytes
-     * frame_count -> 4 bytes
+     * magic            -> 4 bytes
+     * version          -> 4 bytes
+     * file_frame_count -> 4 bytes
+     * file_fps         -> 4 bytes
      */
     if (fread(magic, 1, 4, frames_file) != 4) {
         fclose(frames_file);
@@ -269,7 +287,13 @@ static int frames_open(void) {
         return 0;
     }
 
-    if (fread(&frame_count, sizeof(uint32_t), 1, frames_file) != 1) {
+    if (fread(&file_frame_count, sizeof(uint32_t), 1, frames_file) != 1) {
+        fclose(frames_file);
+        frames_file = NULL;
+        return 0;
+    }
+
+    if (fread(&file_fps, sizeof(uint32_t), 1, frames_file) != 1) {
         fclose(frames_file);
         frames_file = NULL;
         return 0;
@@ -290,16 +314,13 @@ static int frames_open(void) {
         return 0;
     }
 
-    if (frame_count != FRAMES) {
-        fclose(frames_file);
-        frames_file = NULL;
-        return 0;
-    }
+    frame_count = file_frame_count;
+    fps = file_fps;
 
     /*
      * Carrega o índice inteiro para memória.
      */
-    frame_index = malloc(sizeof(FrameIndex) * FRAMES);
+    frame_index = malloc(sizeof(FrameIndex) * frame_count);
 
     if (frame_index == NULL) {
         fclose(frames_file);
@@ -307,7 +328,7 @@ static int frames_open(void) {
         return 0;
     }
 
-    if (fread(frame_index, sizeof(FrameIndex), FRAMES, frames_file) != FRAMES) {
+    if (fread(frame_index, sizeof(FrameIndex), frame_count, frames_file) != frame_count) {
         free(frame_index);
         frame_index = NULL;
 
@@ -323,7 +344,7 @@ static int frames_open(void) {
      */
     uint32_t max_size = 0;
 
-    for (int i = 0; i < FRAMES; i++) {
+    for (uint32_t i = 0; i < frame_count; i++) {
         if (frame_index[i].size > max_size) {
             max_size = frame_index[i].size;
         }
@@ -369,8 +390,8 @@ static void frames_close(void) {
 /*
  * Carrega um frame específico para o buffer reutilizável.
  */
-static int frame_read(int frame, char **buffer, uint32_t *size) {
-    if (frame < 1 || frame > FRAMES) {
+static int frame_read(uint32_t frame, char **buffer, uint32_t *size) {
+    if (frame < 1 || frame > frame_count) {
         return 0;
     }
 
@@ -457,8 +478,9 @@ int main(void) {
 
     clock_gettime(CLOCK_MONOTONIC, &start);
 
+    double frame_time_ms = 1000.0 / fps;
 
-    for (int i = 1; i <= FRAMES; i++) {
+    for (uint32_t i = 1; i <= frame_count; i++) {
         /*
          * Calcula o instante ideal do frame.
          *
@@ -467,7 +489,7 @@ int main(void) {
          * Frame 3 -> 66.66 ms
          * ...
          */
-        double target_ms = (i - 1) * FRAME_TIME_MS;
+        double target_ms = (i - 1) * frame_time_ms;
 
         while (elapsed_ms(&start) < target_ms) {
             usleep(1000);
@@ -481,7 +503,7 @@ int main(void) {
         uint32_t frame_size;
 
         if (!frame_read(i, &frame_data, &frame_size)) {
-            fprintf(stderr, "\nErro ao ler frame: %04d\n", i);
+            fprintf(stderr, "\nErro ao ler frame: %06d\n", i);
             break;
         }
 
@@ -499,7 +521,7 @@ int main(void) {
 
         printf("\n ------------------------\n");
         printf(" | Time: %02d:%02d          |\n", min, sec);
-        printf(" | Frame: %04d          |", i);
+        printf(" | Frame: %06d          |", i);
         printf("\n ------------------------\n");
 
         csrs();

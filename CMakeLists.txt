@@ -56,7 +56,7 @@ if(EMSCRIPTEN)
         "-O2"
 
         "--preload-file"
-        "${CMAKE_SOURCE_DIR}/frames/frames.bin@/frames/frames.bin"
+        "${CMAKE_SOURCE_DIR}/frames/_frames.bin@/frames/_frames.bin"
 
         "-sEXPORTED_FUNCTIONS=['_get_frame','_get_frame_count','_get_fps']"
 
